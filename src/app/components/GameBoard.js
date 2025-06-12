@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import styles from "../styles/GameBoard.module.scss";
+import styles from '../styles/GameBoard.module.scss';
 
 const GameBoard = () => {
     const [board, setBoard] = useState(Array(9).fill(null));
