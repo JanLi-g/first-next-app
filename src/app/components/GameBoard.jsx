@@ -1,10 +1,13 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from '../styles/GameBoard.module.scss';
 import Cell from './Cell';
 import Score from './Score';
 import ResetButton from './ResetButton';
+import BackButton from './BackButton';
+import { useDispatch } from "react-redux";
+import { increment } from "../features/counterSlice";
 
 /**
  * board: array with length=9; initial filled with null; saves if field is empty or contains "X"|"O"
@@ -15,21 +18,21 @@ import ResetButton from './ResetButton';
 const GameBoard = () => {
     const [board, setBoard] = useState(Array(9).fill(null));
     const [currentPlayer, setCurrentPlayer] = useState("X");
-    const [scoreX, setScoreX] = useState(0);
-    const [scoreO, setScoreO] = useState(0);
+    const dispatch = useDispatch();
+    const [isGameOver, setIsGameOver] = useState(false);
+    const router = useRouter();
 
   /**
    * tests if field is used, if true --> nothing happens
    * @param index
+   * creates board-array, copies the actual state and fills the field with "X" or "O"
+   * refreshes the board with setBoard(newBoard)
+   * @type {any[][]}
+   *
    */
   const handleCellClick = (index) => {
-    if (board[index]) return;
+    if (board[index] || isGameOver) return;
 
-    /**
-     * creates board-array, copies the actual state and fills the field with "X" or "O"
-     * refreshes the board with setBoard(newBoard)
-     * @type {any[][]}
-     */
     const newBoard= [...board];
     newBoard[index] = currentPlayer;
     setBoard(newBoard);
@@ -39,10 +42,10 @@ const GameBoard = () => {
      * if nobody has won it changes the currentPlayer to the other player
      */
     if (checkWinner(newBoard, currentPlayer)) {
+
       alert(`Player ${currentPlayer} has won!`);
-      if (currentPlayer === "X") setScoreX(scoreX + 1);
-      else setScoreO(scoreO + 1);
-      resetBoard();
+      dispatch(increment(currentPlayer));
+      setIsGameOver(true);
     } else {
       setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
     }
@@ -54,7 +57,12 @@ const GameBoard = () => {
   const resetBoard = () => {
     setBoard(Array(9).fill(null));
     setCurrentPlayer("X");
+    setIsGameOver(false);
   };
+
+  const changePage = () => {
+    router.push("/");
+  }
 
   /**
    * checks for every condition, if all three fields are used from the current player
@@ -92,8 +100,8 @@ const GameBoard = () => {
   return (
       <div>
         <div className={styles.scores}>
-          <Score player="X" score={scoreX} isActive={currentPlayer === "X"} />
-          <Score player="O" score={scoreO} isActive={currentPlayer === "O"} />
+          <Score player="X" isActive={currentPlayer === "X"} />
+          <Score player="O" isActive={currentPlayer === "O"} />
         </div>
         <div className={styles.board}>
           {board.map((cell, index) => (
@@ -105,6 +113,7 @@ const GameBoard = () => {
           ))}
         </div>
         <ResetButton onClick={resetBoard} />
+        <BackButton onClick={changePage} label="Zurück zum Dashboard"/>
       </div>
   );
 }
